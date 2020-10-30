@@ -1,5 +1,5 @@
 [package]
-name = "sub_projects"
+name = "git-bfg"
 publish = false
 version = "0.0.0"
 authors = ["Aster <192607617@qq.com>"]
@@ -10,11 +10,17 @@ license = "MPL-2.0"
 edition = "2021"
 
 [dependencies]
+clap = "3.0.13"
+git2 = "0.13.25"
 
 [dev-dependencies]
 
 [features]
 default = []
+
+[[bin]]
+name = "bfg"
+path = "src/main.rs"
 
 [package.metadata.wee]
 t = "cargo test"
