@@ -1,7 +1,7 @@
-mod cmd;
+mod cleaner;
 mod errors;
 
-pub use errors::{Error, Result};
+pub use errors::{CleanerError, Result};
 
 
 fn main() {
