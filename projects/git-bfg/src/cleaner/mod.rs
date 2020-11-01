@@ -1,8 +1,10 @@
 use std::cmp::Ordering;
 use std::env::current_dir;
 use std::ffi::OsString;
+use std::fmt::{Debug, Display, Formatter, Write};
 use std::fs::read_dir;
 use std::path::{Path, PathBuf};
+use byte_unit::Byte;
 use git2::{Blob, ObjectType, Oid, Repository};
 use sorted_vec::{ReverseSortedVec, SortedVec};
 use crate::Result;
@@ -44,23 +46,41 @@ impl Cleaner {
         Ok(())
     }
 }
+
 #[derive(Debug)]
 pub struct BlobItem {
     id: Oid,
     size: usize,
-    format: BlobFormat
+    format: BlobFormat,
 }
+
+impl Display for BlobItem {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let size = Byte::from_bytes(self.size as u128).get_appropriate_unit(false).to_string();
+        write!(f, "{:width$} {} {}", size, self.format, self.id, width = f.width().unwrap_or(6))
+    }
+}
+
 #[derive(Debug)]
 pub enum BlobFormat {
     Binary,
-    Text
+    Text,
+}
+
+impl Display for BlobFormat {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Binary => { f.write_char('b') }
+            Self::Text => { f.write_char('t') }
+        }
+    }
 }
 
 impl BlobFormat {
     pub fn from_blob(blob: &Blob) -> Self {
         match blob.is_binary() {
-            true => {Self::Binary}
-            false => {Self::Text}
+            true => { Self::Binary }
+            false => { Self::Text }
         }
     }
 }
@@ -95,15 +115,18 @@ fn test() -> Result<()> {
     let mut sv = ReverseSortedVec::new();
     for i in cleaner.blobs {
         let r = cleaner.repository.find_blob(i)?;
-        let item = BlobItem{
+        let item = BlobItem {
             id: i,
             format: BlobFormat::from_blob(&r),
-            size: r.size()
+            size: r.size(),
         };
         sv.insert(item);
-
     }
-    println!("{:#?}", sv);
+
+    for i in sv.iter() {
+        println!("{:width$}", i, width = 5)
+    }
+
     // for i in cleaner.trees {
     //     let r = cleaner.repository.find_tree(i)?;
     //     for e in r.iter() {
