@@ -1,3 +1,5 @@
+mod blob_item;
+
 use std::cmp::Ordering;
 use std::env::current_dir;
 use std::ffi::OsString;
@@ -6,7 +8,7 @@ use std::fs::read_dir;
 use std::path::{Path, PathBuf};
 use byte_unit::Byte;
 use git2::{Blob, ObjectType, Oid, Repository};
-use sorted_vec::{ReverseSortedVec, SortedVec};
+use sorted_vec::{ReverseSortedVec};
 use crate::Result;
 
 pub struct Cleaner {
@@ -23,7 +25,7 @@ impl Cleaner {
             blobs: vec![],
         })
     }
-    pub fn collect(&mut self) -> Result<()> {
+    pub fn collect_info(&mut self) -> Result<()> {
         let db = self.repository.odb()?;
         db.foreach(|c| {
             let o = match db.read(c.to_owned()) {
@@ -45,6 +47,35 @@ impl Cleaner {
         })?;
         Ok(())
     }
+    pub fn largest_objects(&self, take:Option<usize>, show: Option<usize>) -> Vec<BlobItem>  {
+        let show = show.unwrap_or(100);
+        println!("Find {} files and {} dir, here's {} largest objects:", self.blobs.len(), self.trees.len(), show);
+        let mut sv = ReverseSortedVec::new();
+        for i in &self.blobs {
+            let blob = match self.repository.find_blob(i.to_owned()) {
+                Ok(o) => {o}
+                Err(_) => {
+                    println!("{} had broken", i);
+                    continue
+                }
+            };
+            let item = BlobItem {
+                id: i.to_owned(),
+                format: BlobFormat::from_blob(&blob),
+                size: blob.size(),
+            };
+            sv.insert(item);
+        }
+        let mut sv = sv.into_vec();
+        if let Some(take) = take {
+            sv = sv.into_iter().take(take).collect();
+        }
+
+        for (index, item) in sv.iter().take(show).enumerate() {
+            println!("{:width$} | {}", index + 1, item, width = show.log10() as usize)
+        }
+        sv
+    }
 }
 
 #[derive(Debug)]
@@ -54,88 +85,11 @@ pub struct BlobItem {
     format: BlobFormat,
 }
 
-impl Display for BlobItem {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        let size = Byte::from_bytes(self.size as u128).get_appropriate_unit(false).to_string();
-        write!(f, "{:>9} {}", size, self.id)
-    }
-}
-
 #[derive(Debug)]
 pub enum BlobFormat {
     Binary,
     Text,
 }
-
-impl Display for BlobFormat {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Binary => { f.write_char('b') }
-            Self::Text => { f.write_char('t') }
-        }
-    }
-}
-
-impl BlobFormat {
-    pub fn from_blob(blob: &Blob) -> Self {
-        match blob.is_binary() {
-            true => { Self::Binary }
-            false => { Self::Text }
-        }
-    }
-}
-
-impl Eq for BlobItem {}
-
-impl PartialEq<Self> for BlobItem {
-    fn eq(&self, other: &Self) -> bool {
-        self.size.eq(&other.size)
-    }
-}
-
-impl PartialOrd<Self> for BlobItem {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        self.size.partial_cmp(&other.size)
-    }
-}
-
-impl Ord for BlobItem {
-    fn cmp(&self, other: &Self) -> Ordering {
-        self.size.cmp(&other.size)
-    }
-}
-
-
-#[test]
-fn test() -> Result<()> {
-    let root = get_project_root()?;
-    let mut cleaner = Cleaner::new(&root)?;
-    cleaner.collect()?;
-    println!("Find {} files and {} dir, {} largest objects", cleaner.blobs.len(), cleaner.trees.len(), 100);
-    let mut sv = ReverseSortedVec::new();
-    for i in cleaner.blobs {
-        let r = cleaner.repository.find_blob(i)?;
-        let item = BlobItem {
-            id: i,
-            format: BlobFormat::from_blob(&r),
-            size: r.size(),
-        };
-        sv.insert(item);
-    }
-
-    for (index, item) in sv.iter().take(100).enumerate() {
-        println!("{:width$} {}", index + 1, item, width = 2)
-    }
-
-    // for i in cleaner.trees {
-    //     let r = cleaner.repository.find_tree(i)?;
-    //     for e in r.iter() {
-    //         println!("{:?}", e.name())
-    //     }
-    // }
-    Ok(())
-}
-
 
 pub fn get_project_root() -> std::io::Result<PathBuf> {
     let path = current_dir()?;

@@ -1,9 +1,23 @@
+#![feature(int_log)]
+
 mod cleaner;
 mod errors;
 
 pub use errors::{CleanerError, Result};
 
+pub use self::cleaner::{Cleaner, get_project_root};
 
-fn main() {
+fn main() -> Result<()> {
+    let root = get_project_root()?;
+    let mut cleaner = Cleaner::new(&root)?;
+    cleaner.collect_info()?;
+    cleaner.largest_objects(Some(10), None);
 
+    // for i in cleaner.trees {
+    //     let r = cleaner.repository.find_tree(i)?;
+    //     for e in r.iter() {
+    //         println!("{:?}", e.name())
+    //     }
+    // }
+    Ok(())
 }
