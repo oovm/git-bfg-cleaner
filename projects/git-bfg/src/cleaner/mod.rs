@@ -57,7 +57,7 @@ pub struct BlobItem {
 impl Display for BlobItem {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let size = Byte::from_bytes(self.size as u128).get_appropriate_unit(false).to_string();
-        write!(f, "{:width$} {} {}", size, self.format, self.id, width = f.width().unwrap_or(6))
+        write!(f, "{:>9} {}", size, self.id)
     }
 }
 
@@ -111,7 +111,7 @@ fn test() -> Result<()> {
     let root = get_project_root()?;
     let mut cleaner = Cleaner::new(&root)?;
     cleaner.collect()?;
-    println!("Find {} files and {} dir", cleaner.blobs.len(), cleaner.trees.len());
+    println!("Find {} files and {} dir, {} largest objects", cleaner.blobs.len(), cleaner.trees.len(), 100);
     let mut sv = ReverseSortedVec::new();
     for i in cleaner.blobs {
         let r = cleaner.repository.find_blob(i)?;
@@ -123,8 +123,8 @@ fn test() -> Result<()> {
         sv.insert(item);
     }
 
-    for i in sv.iter() {
-        println!("{:width$}", i, width = 5)
+    for (index, item) in sv.iter().take(100).enumerate() {
+        println!("{:width$} {}", index + 1, item, width = 2)
     }
 
     // for i in cleaner.trees {
