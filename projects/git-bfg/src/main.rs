@@ -1,4 +1,5 @@
 #![feature(int_log)]
+#![doc = include_str!("../Readme.md")]
 
 mod cleaner;
 mod errors;

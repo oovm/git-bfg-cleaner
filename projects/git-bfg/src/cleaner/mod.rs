@@ -47,15 +47,15 @@ impl Cleaner {
         })?;
         Ok(())
     }
-    pub fn largest_objects(&self, show: usize) -> Vec<BlobItem>  {
+    pub fn largest_objects(&self, show: usize) -> Vec<BlobItem> {
         println!("Find {} files and {} dir, here's {} largest objects:", self.blobs.len(), self.trees.len(), show);
         let mut sv = ReverseSortedVec::new();
         for i in &self.blobs {
             let blob = match self.repository.find_blob(i.to_owned()) {
-                Ok(o) => {o}
+                Ok(o) => { o }
                 Err(_) => {
                     println!("{} had broken", i);
-                    continue
+                    continue;
                 }
             };
             let item = BlobItem {
@@ -66,7 +66,7 @@ impl Cleaner {
             sv.insert(item);
         }
         for (index, item) in sv.iter().take(show).enumerate() {
-            println!("{:width$} | {}", index + 1, item, width = show.log10() as usize)
+            println!("{:width$} | {}", index + 1, item, width = 1 + show.log10() as usize)
         }
         sv.into_vec()
     }

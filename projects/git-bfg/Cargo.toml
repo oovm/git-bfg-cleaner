@@ -1,8 +1,8 @@
 [package]
 name = "git-bfg"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Aster <192607617@qq.com>"]
-description = "..."
+description = "Find largest files in git repo"
 repository = "https://github.com/oovm/git-bfg-cleaner"
 readme = "Readme.md"
 license = "MPL-2.0"
@@ -27,3 +27,4 @@ path = "src/main.rs"
 [package.metadata.wee]
 t = "cargo test"
 p = "cargo publish --allow-dirty"
+i = "cargo install --path ."
