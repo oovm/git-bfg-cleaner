@@ -2,11 +2,10 @@
 pub enum CleanerError {
     IOError(std::io::Error),
     GitError(git2::Error),
-    UnknownError
+    UnknownError,
 }
 
 pub type Result<T> = std::result::Result<T, CleanerError>;
-
 
 impl From<()> for CleanerError {
     fn from(_: ()) -> Self {
@@ -19,7 +18,6 @@ impl From<std::io::Error> for CleanerError {
         Self::IOError(e)
     }
 }
-
 
 impl From<git2::Error> for CleanerError {
     fn from(e: git2::Error) -> Self {

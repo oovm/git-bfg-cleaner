@@ -1,6 +1,5 @@
 use super::*;
 
-
 impl Display for BlobItem {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let size = Byte::from_bytes(self.size as u128).get_appropriate_unit(false).to_string();
@@ -8,12 +7,11 @@ impl Display for BlobItem {
     }
 }
 
-
 impl Display for BlobFormat {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Binary => { f.write_char('b') }
-            Self::Text => { f.write_char('t') }
+            Self::Binary => f.write_char('b'),
+            Self::Text => f.write_char('t'),
         }
     }
 }
@@ -21,8 +19,8 @@ impl Display for BlobFormat {
 impl BlobFormat {
     pub fn from_blob(blob: &Blob) -> Self {
         match blob.is_binary() {
-            true => { Self::Binary }
-            false => { Self::Text }
+            true => Self::Binary,
+            false => Self::Text,
         }
     }
 }

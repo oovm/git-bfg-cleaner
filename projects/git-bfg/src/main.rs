@@ -6,7 +6,7 @@ mod errors;
 
 pub use errors::{CleanerError, Result};
 
-pub use self::cleaner::{Cleaner, get_project_root};
+pub use self::cleaner::{get_project_root, Cleaner};
 
 fn main() -> Result<()> {
     let root = get_project_root()?;
