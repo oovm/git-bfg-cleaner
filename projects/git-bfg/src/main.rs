@@ -11,7 +11,7 @@ fn main() -> Result<()> {
     let root = get_project_root()?;
     let mut cleaner = Cleaner::new(&root)?;
     cleaner.collect_info()?;
-    cleaner.largest_objects(Some(10), None);
+    cleaner.largest_objects(100);
 
     // for i in cleaner.trees {
     //     let r = cleaner.repository.find_tree(i)?;

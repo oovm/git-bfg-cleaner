@@ -1,10 +1,9 @@
 [package]
 name = "git-bfg"
-publish = false
-version = "0.0.0"
+version = "0.1.0"
 authors = ["Aster <192607617@qq.com>"]
 description = "..."
-repository = "..."
+repository = "https://github.com/oovm/git-bfg-cleaner"
 readme = "Readme.md"
 license = "MPL-2.0"
 edition = "2021"

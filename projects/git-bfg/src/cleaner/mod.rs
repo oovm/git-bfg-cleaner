@@ -47,8 +47,7 @@ impl Cleaner {
         })?;
         Ok(())
     }
-    pub fn largest_objects(&self, take:Option<usize>, show: Option<usize>) -> Vec<BlobItem>  {
-        let show = show.unwrap_or(100);
+    pub fn largest_objects(&self, show: usize) -> Vec<BlobItem>  {
         println!("Find {} files and {} dir, here's {} largest objects:", self.blobs.len(), self.trees.len(), show);
         let mut sv = ReverseSortedVec::new();
         for i in &self.blobs {
@@ -66,15 +65,10 @@ impl Cleaner {
             };
             sv.insert(item);
         }
-        let mut sv = sv.into_vec();
-        if let Some(take) = take {
-            sv = sv.into_iter().take(take).collect();
-        }
-
         for (index, item) in sv.iter().take(show).enumerate() {
             println!("{:width$} | {}", index + 1, item, width = show.log10() as usize)
         }
-        sv
+        sv.into_vec()
     }
 }
 
