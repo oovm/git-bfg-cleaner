@@ -2,7 +2,7 @@ mod blob_item;
 
 use crate::Result;
 use byte_unit::Byte;
-use git2::{Blob, ObjectType, Oid, Repository, TreeBuilder, TreeEntry};
+use git2::{Blob, ObjectType, Oid, Repository};
 use sorted_vec::ReverseSortedVec;
 use std::{
     cmp::Ordering,
@@ -17,13 +17,20 @@ pub struct Cleaner {
     repository: Repository,
     trees: Vec<Oid>,
     blobs: Vec<Oid>,
+    blob_size: usize,
 }
 
 impl Cleaner {
     pub fn new(root: &Path) -> Result<Self> {
-        Ok(Self { repository: Repository::open(root)?, trees: vec![], blobs: vec![] })
+        Ok(Self { repository: Repository::open(root)?, trees: vec![], blobs: vec![], blob_size: 0 })
+    }
+    pub fn clear(&mut self) {
+        self.trees.clear();
+        self.blobs.clear();
+        self.blob_size = 0;
     }
     pub fn collect_info(&mut self) -> Result<()> {
+        self.clear();
         let db = self.repository.odb()?;
         db.foreach(|c| {
             let o = match db.read(c.to_owned()) {
@@ -36,7 +43,10 @@ impl Cleaner {
                 ObjectType::Any => {}
                 ObjectType::Commit => {}
                 ObjectType::Tree => self.trees.push(c.to_owned()),
-                ObjectType::Blob => self.blobs.push(c.to_owned()),
+                ObjectType::Blob => {
+                    self.blobs.push(c.to_owned());
+                    self.blob_size += o.len()
+                }
                 ObjectType::Tag => {}
             }
             true
@@ -44,7 +54,8 @@ impl Cleaner {
         Ok(())
     }
     pub fn largest_objects(&self, show: usize) -> Vec<BlobItem> {
-        println!("Find {} files and {} dir, here's {} largest objects:", self.blobs.len(), self.trees.len(), show);
+        println!("Finding {} files and {} directories take {}", self.blobs.len(), self.trees.len(), self.all_size());
+        println!("Here are {} largest objects:", show);
         let mut sv = ReverseSortedVec::new();
         for i in &self.blobs {
             let blob = match self.repository.find_blob(i.to_owned()) {
@@ -61,6 +72,9 @@ impl Cleaner {
             println!("{:width$} | {}", index + 1, item, width = 1 + show.log10() as usize)
         }
         sv.into_vec()
+    }
+    pub fn all_size(&self) -> String {
+        Byte::from_bytes(self.blob_size as u128).get_appropriate_unit(false).to_string()
     }
 }
 

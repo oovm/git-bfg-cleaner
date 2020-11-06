@@ -1,6 +1,6 @@
 [package]
 name = "git-bfg"
-version = "0.1.1"
+version = "0.2.0"
 authors = ["Aster <192607617@qq.com>"]
 description = "Find largest files in git repo"
 repository = "https://github.com/oovm/git-bfg-cleaner"
@@ -14,7 +14,7 @@ git2 = "0.13.25"
 project-root = "0.2.2"
 sorted-vec = "0.7.0"
 byte-unit = "4.0.13"
-cli-log = "2.0.0"
+#cli-log = "2.0.0"
 
 [dev-dependencies]
 
